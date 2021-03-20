@@ -8,7 +8,9 @@ import {
   classNamesFunction,
   styled,
   initializeComponentRef,
+  IStyleFunctionOrObject,
 } from '../../Utilities';
+import { Label, ILabelStyleProps, ILabelStyles } from '../Label/index';
 import { IProcessedStyleSet } from '../../Styling';
 import { IFocusZone, FocusZone, FocusZoneDirection } from '../../FocusZone';
 import { Callout } from '../../Callout';
@@ -29,6 +31,7 @@ import {
   ValidationState,
   IBasePickerStyleProps,
   IBasePickerStyles,
+  IBasePickerSubComponentStyles,
 } from './BasePicker.types';
 import { IAutofill, Autofill } from '../Autofill/index';
 import { IPickerItemProps } from './PickerItem.types';
@@ -69,6 +72,10 @@ export type IPickerAriaIds = {
    * Aria id for element with role=combobox
    */
   combobox: string;
+  /**
+   * Aria id for label
+   */
+  label: string;
 };
 
 const getClassNames = classNamesFunction<IBasePickerStyleProps, IBasePickerStyles>();
@@ -132,6 +139,7 @@ export class BasePicker<T, P extends IBasePickerProps<T>> extends React.Componen
       selectedSuggestionAlert: `selected-suggestion-alert-${this._id}`,
       suggestionList: `suggestion-list-${this._id}`,
       combobox: `combobox-${this._id}`,
+      label: `label-${this._id}`,
     };
     this.suggestionStore = new SuggestionsController<T>();
     this.selection = new Selection({ onSelectionChanged: () => this.onSelectionChange() });
@@ -243,7 +251,7 @@ export class BasePicker<T, P extends IBasePickerProps<T>> extends React.Componen
 
   public render(): JSX.Element {
     const { suggestedDisplayValue, isFocused, items } = this.state;
-    const { className, inputProps, disabled, theme, styles } = this.props;
+    const { className, label, required, inputProps, disabled, theme, styles } = this.props;
 
     const selectedSuggestionAlertId = this.props.enableSelectedSuggestionAlert
       ? this._ariaMap.selectedSuggestionAlert
@@ -266,6 +274,8 @@ export class BasePicker<T, P extends IBasePickerProps<T>> extends React.Componen
           isFocused,
           disabled,
           inputClassName: inputProps && inputProps.className,
+          hasLabel: !!label,
+          required,
         })
       : {
           root: css('ms-BasePicker', className ? className : ''),
@@ -277,6 +287,7 @@ export class BasePicker<T, P extends IBasePickerProps<T>> extends React.Componen
 
     return (
       <div ref={this.root} className={classNames.root} onKeyDown={this.onKeyDown} onBlur={this.onBlur}>
+        {this.onRenderLabel(classNames.subComponentStyles)}
         <FocusZone
           componentRef={this.focusZone}
           direction={FocusZoneDirection.bidirectional}
@@ -888,6 +899,28 @@ export class BasePicker<T, P extends IBasePickerProps<T>> extends React.Componen
       );
     }
   }
+
+  protected onRenderLabel = (subComponentStyles: IBasePickerSubComponentStyles): JSX.Element | null => {
+    // IProcessedStyleSet definition requires casting for what Label expects as its styles prop
+    const labelStyles = subComponentStyles
+      ? (subComponentStyles.label as IStyleFunctionOrObject<ILabelStyleProps, ILabelStyles>)
+      : undefined;
+
+    if (this.props.label) {
+      return (
+        <Label
+          htmlFor={this._id}
+          required={this.props.required}
+          styles={labelStyles}
+          disabled={this.props.disabled}
+          id={this._ariaMap.label}
+        >
+          {this.props.label}
+        </Label>
+      );
+    }
+    return null;
+  };
 
   /**
    * Takes in the current updated value and either resolves it with the new suggestions

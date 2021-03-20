@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { IPickerItemProps } from './PickerItem.types';
-import { IRefObject, IStyleFunctionOrObject } from '../../Utilities';
+import { IRefObject, IStyleFunctionOrObject, IRenderFunction } from '../../Utilities';
 import { ISuggestionModel, ISuggestionsProps } from './Suggestions/Suggestions.types';
 import { Autofill } from '../../Autofill';
 import { ICalloutProps } from '../../Callout';
@@ -120,6 +120,11 @@ export interface IBasePickerProps<T> extends React.Props<any> {
   className?: string;
 
   /**
+   *  Label displayed above the picker (and read by screen readers)
+   */
+  label?: string;
+
+  /**
    * The properties that will get passed to the Suggestions component.
    */
   pickerSuggestionsProps?: IBasePickerSuggestionsProps;
@@ -172,6 +177,12 @@ export interface IBasePickerProps<T> extends React.Props<any> {
    * @defaultvalue ''
    */
   removeButtonAriaLabel?: string;
+
+  /**
+   * Flag for setting the picker as required. So far, it only works when a label is set.
+   * @defaultvalue false
+   */
+  required?: boolean;
 
   /**
    * Optional aria-label that will be placed on the element that has the role "combobox"
@@ -288,13 +299,28 @@ export interface IInputProps extends React.InputHTMLAttributes<HTMLInputElement>
  * The props needed to construct styles.
  * {@docCategory Pickers}
  */
-export type IBasePickerStyleProps = Pick<IBasePickerProps<any>, 'theme' | 'className' | 'disabled'> & {
+export type IBasePickerStyleProps = Pick<IBasePickerProps<any>, 'theme' | 'className' | 'disabled' | 'required'> & {
   /** Whether text style area is focused */
   isFocused?: boolean;
 
   /** Optional pickerInput className */
   inputClassName?: string;
+
+  /** Element has a label */
+  hasLabel?: boolean;
 };
+
+/**
+ * {@docCategory Pickers}
+ */
+export interface IBasePickerSubComponentStyles {
+  /**
+   * Styling for Label child component.
+   */
+  // TODO: this should be the interface once we're on TS 2.9.2 but otherwise causes errors in 2.8.4
+  // label: IStyleFunctionOrObject<ILabelStyleProps, ILabelStyles>;
+  label: IStyleFunctionOrObject<any, any>;
+}
 
 /**
  * Represents the stylable areas of the control.
@@ -318,4 +344,9 @@ export interface IBasePickerStyles {
 
   /** Refers to helper element used for accessibility tools (hidden from view on screen). */
   screenReaderText: IStyle;
+
+  /**
+   * Styling for subcomponents.
+   */
+  subComponentStyles: IBasePickerSubComponentStyles;
 }
